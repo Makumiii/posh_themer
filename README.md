@@ -1,35 +1,21 @@
-# 🎨 Posh Themer
+# 🌈 posh_themer
 
-**Posh Themer** is a lightweight CLI tool for previewing and applying [Oh My Posh](https://ohmyposh.dev) themes right from your terminal.  
-Built with **Deno**, it's blazing fast, interactive, and perfect for customizing your Zsh prompt on the fly.
+A simple CLI tool to preview and switch between your installed [Oh My Posh](https://ohmyposh.dev) themes — right from your terminal.
 
 ---
 
 ## ✨ Features
 
-- 🧭 Browse and preview Oh My Posh themes
-- ⚡ Apply a theme to your terminal instantly
-- 🧠 Automatically updates your `.zshrc`
-- 🖥️ Interactive terminal UI (no need to remember paths!)
-- ✅ Works offline once installed
+- Preview your installed Oh My Posh themes instantly
+- Quickly apply any theme with a numbered selector
+- Works with any terminal using `zsh` or `bash`
+- No external dependencies beyond `oh-my-posh`
 
 ---
 
-## 🧰 Requirements
+## ⚙️ Installation
 
-Before using Posh Themer, make sure the following are installed:
-
-- [Deno](https://deno.land/manual/getting_started/installation)
-- [Oh My Posh](https://ohmyposh.dev/docs/installation/linux)
-- Zsh (theming modifies `.zshrc`)
-
----
-
-## 🚀 Installation
-
-### ✅ One-liner (Recommended)
-
-Run this script in your terminal:
+To install `posh_themer`, run the following command in your terminal:
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/Makumiii/posh_themer/main/install.sh)
+curl -s https://raw.githubusercontent.com/Makumiii/posh_themer/main/install.sh | bash
