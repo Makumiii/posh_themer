@@ -16,11 +16,12 @@ install(){
     git clone $REPO_URL
 
     cat <<EOF >> ~/.zshrc 
-##added by posh_themer_installer
+#posh_themer:start
 function posh_theme(){
     $DENO_CMD && source ~/.zshrc
 }
 posh_theme
+#posh_themer:end
 
 EOF
     
