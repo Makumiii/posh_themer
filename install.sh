@@ -1,7 +1,8 @@
 #!/bin/bash
 REPO_URL="git@github.com:Makumiii/posh_themer.git"
 FOLDER_NAME="posh_themer"
-DENO_CMD="deno -A ~/$FOLDER_NAME/index.ts"
+DENO_CMD="deno -A $HOME/$FOLDER_NAME/index.ts"
+USER_BIN_PATH="$HOME/.local/bin"
 
 cat <<EOF 
 -----WELCOME TO POSH_THEMER-----
@@ -10,24 +11,18 @@ Installation will run now
 EOF
 
 echo checking if already installed
-cd ~ || exit
+cd "$HOME" || exit
 
 install(){
-    git clone $REPO_URL
+    git clone $REPO_URL || { echo "failed to clone repo" ; return 1; }
+    cd "$USER_BIN_PATH" || { echo "failed to navigate to path" ; return 1; }
+    echo "$DENO_CMD" > posh_theme.sh
+    chmod +x posh_theme.sh
+    { echo "success installing posh_themer" ; return 0; }
 
-    cat <<EOF >> ~/.zshrc 
-#posh_themer:start
-function posh_theme(){
-    $DENO_CMD && source ~/.zshrc
-}
-posh_theme
-#posh_themer:end
-
-EOF
-    
 }
 
-if [ -d ~/"$FOLDER_NAME" ]; then
+if [ -d "$HOME/$FOLDER_NAME" ]; then
     echo Already installed
 
     echo Remove existing folder at ~/posh_themer
