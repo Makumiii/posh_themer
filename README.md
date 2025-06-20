@@ -1,6 +1,7 @@
 # 🌈 posh_themer
 
-A simple CLI tool to preview and switch between your installed [Oh My Posh](https://ohmyposh.dev) themes — right from your terminal.
+A simple CLI tool to preview and switch between your installed
+[Oh My Posh](https://ohmyposh.dev) themes — right from your terminal.
 
 ---
 
@@ -19,3 +20,4 @@ To install `posh_themer`, run the following command in your terminal:
 
 ```bash
 curl -s https://raw.githubusercontent.com/Makumiii/posh_themer/main/install.sh | bash
+```
