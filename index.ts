@@ -35,6 +35,8 @@ async function applyTheme(themeNumber: number) {
 
   const withNewPath = data.replace(themeLine,newLine)
   await Deno.writeTextFile(zshPath, withNewPath)
+  console.log('theme applied successfully')
+  Deno.exit()
   
 }
 
