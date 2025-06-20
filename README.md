@@ -21,3 +21,11 @@ To install `posh_themer`, run the following command in your terminal:
 ```bash
 curl -s https://raw.githubusercontent.com/Makumiii/posh_themer/main/install.sh | bash
 ```
+
+## Uninstalling
+
+To uninstall the tool run the following command on your terminal 
+
+```bash 
+posh_theme uninstall
+```
