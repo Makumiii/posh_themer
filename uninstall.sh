@@ -10,6 +10,7 @@ if [ -d ~/"$FOLDER_NAME" ] ; then
     #remove function from .zshrc
 
     sed -i '/#posh_themer:start/,/#posh_themer:end/d' ~/.zshrc
+    echo "finished unistalling posh_themer assets"
 else 
    echo "folder to delete not found"
    exit 1
