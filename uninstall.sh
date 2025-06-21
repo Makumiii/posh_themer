@@ -2,7 +2,7 @@
 
 echo "starting posh themer uninstall"
 FOLDER_NAME="posh_themer"
-BIN_FILE_LOCATION="$HOME/.local/bin/posh_theme.sh"
+BIN_FILE_LOCATION="$HOME/.local/bin/posh_theme"
 cd "$HOME" || exit
 
 if [ -d "$HOME/$FOLDER_NAME" ] ; then
