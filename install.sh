@@ -16,6 +16,7 @@ install(){
     git clone $REPO_URL || { echo "failed to clone repo" ; return 1; }
     cd "$USER_BIN_PATH" || { echo "failed to navigate to path" ; return 1; }
     cp "$HOME/$FOLDER_NAME/posh_theme.sh" "$USER_BIN_PATH"
+    mv "posh_theme.sh" "posh_theme"
 
 
     chmod +x posh_theme.sh
