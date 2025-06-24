@@ -1,4 +1,5 @@
 import { select, Separator } from "npm:@inquirer/prompts";
+import autocomplete from "inquirer-autocomplete-standalone"
 const path = "/home/maks/.cache/oh-my-posh/themes";
 const zshPath = "/home/maks/.zshrc";
 
@@ -12,12 +13,25 @@ async function promptThemes() {
   const themes = getThemes(path);
 
 
-  const answer = await select({
-    message: "select the theme you want",
-    choices: themes,
-    loop:false,
-    pageSize:10
-  });
+  const answer = await autocomplete({
+    message:'select your theme or search for it ',
+    source:async (input?:string)=>{
+      const query = (input ?? '').toLocaleLowerCase()
+
+      const filtered =  themes.filter((theme) =>
+        theme.toLowerCase().includes(query)
+      );
+      return filtered.map((theme)=>{
+        return {
+          name:theme,
+          value: theme,
+        }
+      })
+
+    },
+    pageSize:10,
+  
+  })
   return answer;
 }
 
