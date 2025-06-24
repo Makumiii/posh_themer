@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 FOLDER_NAME="posh_themer"
 DENO_CMD="deno -A $HOME/$FOLDER_NAME/index.ts"
 
@@ -12,8 +12,8 @@ else
  
 
     $DENO_CMD
-    exec zsh
 
+    exec zsh
 
 fi
 

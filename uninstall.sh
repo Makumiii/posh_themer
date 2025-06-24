@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "starting posh themer uninstall"
 FOLDER_NAME="posh_themer"

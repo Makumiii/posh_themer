@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 REPO_URL="git@github.com:Makumiii/posh_themer.git"
 FOLDER_NAME="posh_themer"
 USER_BIN_PATH="$HOME/.local/bin"
