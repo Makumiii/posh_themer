@@ -7,12 +7,12 @@ INSTRUCTION="${1,,}"
 
 if [ "$INSTRUCTION" = "uninstall" ]; then 
     cd "$HOME/posh_themer" || exit
-    ./uninstall
+    ./uninstall.sh
 else
  
 
     $DENO_CMD
-    source "$HOME/.zshrc"
+    exec zsh
 
 
 fi
