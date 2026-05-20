@@ -1,6 +1,6 @@
 /**
  * Posh Themer - Interactive Oh My Posh Theme Selector
- * 
+ *
  * Browse, preview, and apply oh-my-posh themes with a beautiful TUI
  */
 
@@ -18,8 +18,8 @@ function getThemes(path: string): string[] {
     const files = Deno.readDirSync(path);
     const filesArray = Array.from(files);
     return filesArray
-      .filter(file => file.isFile && file.name.endsWith(".omp.json"))
-      .map(file => file.name)
+      .filter((file) => file.isFile && file.name.endsWith(".omp.json"))
+      .map((file) => file.name)
       .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   } catch (error) {
     console.error(`Error reading themes directory: ${error}`);
@@ -39,9 +39,10 @@ async function applyTheme(themeName: string): Promise<boolean> {
     // Find the existing oh-my-posh configuration line
     const themeLine = data
       .split("\n")
-      .find(line => line.includes("oh-my-posh") && line.includes("--config"));
+      .find((line) => line.includes("oh-my-posh") && line.includes("--config"));
 
-    const newLine = `eval "$(oh-my-posh init zsh --config ${THEMES_PATH}/${themeName})"`;
+    const newLine =
+      `eval "$(oh-my-posh init zsh --config ${THEMES_PATH}/${themeName})"`;
 
     if (!themeLine) {
       // No existing config found, append the new line
@@ -72,7 +73,9 @@ async function main(): Promise<void> {
 
   if (themes.length === 0) {
     console.error("❌ No themes found in", THEMES_PATH);
-    console.log("\nMake sure oh-my-posh is installed and themes are downloaded.");
+    console.log(
+      "\nMake sure oh-my-posh is installed and themes are downloaded.",
+    );
     console.log("You can download themes with: oh-my-posh font install");
     Deno.exit(1);
   }
@@ -81,7 +84,7 @@ async function main(): Promise<void> {
   console.log("   Loading interactive picker...\n");
 
   // Small delay so user can see the message
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   // Launch interactive picker
   const result = await pickTheme({

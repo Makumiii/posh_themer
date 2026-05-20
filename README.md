@@ -10,7 +10,7 @@ A simple CLI tool to preview and switch between your installed
 - Preview your installed Oh My Posh themes instantly
 - Quickly apply any theme with a numbered selector
 - Works with any terminal using `zsh` or `bash`
-- No external dependencies beyond `oh-my-posh`
+- Requires `oh-my-posh`; the installer will install `deno` if it is missing
 
 ---
 
@@ -24,8 +24,8 @@ curl -s https://raw.githubusercontent.com/Makumiii/posh_themer/main/install.sh |
 
 ## Uninstalling
 
-To uninstall the tool run the following command on your terminal 
+To uninstall the tool run the following command on your terminal
 
-```bash 
+```bash
 posh_theme uninstall
 ```

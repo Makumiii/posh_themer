@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 FOLDER_NAME="posh_themer"
+export PATH="$HOME/.local/bin:$HOME/.deno/bin:$PATH"
 DENO_CMD="deno -A $HOME/$FOLDER_NAME/index.ts"
 
 INSTRUCTION="${1,,}"
@@ -16,4 +17,3 @@ else
     exec zsh
 
 fi
-
