@@ -7,8 +7,15 @@
 import { pickTheme } from "./src/ui/theme-picker.ts";
 
 // Configuration paths
-const THEMES_PATH = "/home/maks/.cache/oh-my-posh/themes";
-const ZSHRC_PATH = "/home/maks/.zshrc";
+const HOME = Deno.env.get("HOME");
+
+if (!HOME) {
+  console.error("HOME is not set; cannot locate Oh My Posh themes or .zshrc.");
+  Deno.exit(1);
+}
+
+const THEMES_PATH = `${HOME}/.cache/oh-my-posh/themes`;
+const ZSHRC_PATH = `${HOME}/.zshrc`;
 
 /**
  * Get all theme files from the themes directory
@@ -42,7 +49,7 @@ async function applyTheme(themeName: string): Promise<boolean> {
       .find((line) => line.includes("oh-my-posh") && line.includes("--config"));
 
     const newLine =
-      `eval "$(oh-my-posh init zsh --config ${THEMES_PATH}/${themeName})"`;
+      `eval "$(oh-my-posh init zsh --config "$HOME/.cache/oh-my-posh/themes/${themeName}")"`;
 
     if (!themeLine) {
       // No existing config found, append the new line

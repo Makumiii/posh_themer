@@ -10,7 +10,8 @@ A simple CLI tool to preview and switch between your installed
 - Preview your installed Oh My Posh themes instantly
 - Quickly apply any theme with a numbered selector
 - Works with any terminal using `zsh` or `bash`
-- Requires `oh-my-posh`; the installer will install `deno` if it is missing
+- Installer prepares `jq`, Deno, Oh My Posh, Oh My Posh themes, and a default
+  `zsh` prompt configuration
 
 ---
 
@@ -21,6 +22,19 @@ To install `posh_themer`, run the following command in your terminal:
 ```bash
 curl -s https://raw.githubusercontent.com/Makumiii/posh_themer/main/install.sh | bash
 ```
+
+The installer keeps app-managed tools user-local where possible:
+
+- Deno is installed under `~/.deno/bin`
+- Oh My Posh is installed under `~/.local/bin`
+- Oh My Posh themes are installed under `~/.cache/oh-my-posh/themes`
+- `~/.zshrc` is updated with `~/.local/bin`, `~/.deno/bin`, and the default
+  `jandedobbeleer` prompt
+
+If `jq` or support packages such as `unzip`, `curl`, or `git` are missing on an
+`apt-get` based system, the installer uses `sudo apt-get` to install them. On
+non-apt systems, install the missing package with your system package manager
+and rerun the installer.
 
 ## Uninstalling
 
