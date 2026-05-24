@@ -40,11 +40,53 @@ ensure_command(){
         return 0
     fi
 
-    install_apt_package "$package_name"
+    install_apt_package "$package_name" || return 1
+
+    if ! command -v "$command_name" >/dev/null 2>&1; then
+        echo "$command_name is still not available after installing $package_name"
+        return 1
+    fi
 }
 
-ensure_jq(){
-    ensure_command jq jq
+ensure_archive_extractor(){
+    if command -v unzip >/dev/null 2>&1; then
+        return 0
+    fi
+
+    if command -v 7z >/dev/null 2>&1; then
+        return 0
+    fi
+
+    echo "neither unzip nor 7z was found; installing unzip"
+    install_apt_package unzip || return 1
+
+    if ! command -v unzip >/dev/null 2>&1; then
+        echo "unzip is still not available after installation"
+        return 1
+    fi
+}
+
+ensure_theme_extractor(){
+    if command -v unzip >/dev/null 2>&1; then
+        return 0
+    fi
+
+    echo "unzip is required to extract oh-my-posh themes"
+    install_apt_package unzip || return 1
+
+    if ! command -v unzip >/dev/null 2>&1; then
+        echo "unzip is still not available after installation"
+        return 1
+    fi
+}
+
+preflight_dependencies(){
+    echo "checking required dependencies"
+    ensure_command curl curl || return 1
+    ensure_command git git || return 1
+    ensure_command jq jq || return 1
+    ensure_command zsh zsh || return 1
+    ensure_theme_extractor || return 1
 }
 
 ensure_deno(){
@@ -54,8 +96,14 @@ ensure_deno(){
 
     echo "deno not found, installing deno"
     ensure_command curl curl || return 1
+    ensure_archive_extractor || return 1
     curl -fsSL https://deno.land/install.sh | sh || { echo "failed to install deno" ; return 1; }
+    if [ ! -x "$DENO_BIN_PATH/deno" ]; then
+        echo "deno installer completed but $DENO_BIN_PATH/deno was not found"
+        return 1
+    fi
     ln -sf "$DENO_BIN_PATH/deno" "$USER_BIN_PATH/deno"
+    command -v deno >/dev/null 2>&1 || { echo "deno is still not available after installation" ; return 1; }
 }
 
 ensure_oh_my_posh(){
@@ -69,6 +117,13 @@ ensure_oh_my_posh(){
         echo "failed to install oh-my-posh"
         return 1
     }
+
+    if [ ! -x "$USER_BIN_PATH/oh-my-posh" ]; then
+        echo "oh-my-posh installer completed but $USER_BIN_PATH/oh-my-posh was not found"
+        return 1
+    fi
+
+    command -v oh-my-posh >/dev/null 2>&1 || { echo "oh-my-posh is still not available after installation" ; return 1; }
 }
 
 ensure_oh_my_posh_themes(){
@@ -78,7 +133,7 @@ ensure_oh_my_posh_themes(){
 
     echo "oh-my-posh themes not found, downloading themes"
     ensure_command curl curl || return 1
-    ensure_command unzip unzip || return 1
+    ensure_theme_extractor || return 1
 
     mkdir -p "$THEMES_PATH" || { echo "failed to create $THEMES_PATH" ; return 1; }
     tmp_file="$(mktemp)" || { echo "failed to create temporary file" ; return 1; }
@@ -146,7 +201,7 @@ configure_zshrc(){
 
 prepare_environment(){
     mkdir -p "$USER_BIN_PATH" || { echo "failed to create $USER_BIN_PATH" ; return 1; }
-    ensure_jq || return 1
+    preflight_dependencies || return 1
     ensure_deno || return 1
     ensure_oh_my_posh || return 1
     ensure_oh_my_posh_themes || return 1
@@ -161,7 +216,6 @@ install_launcher(){
 
 install(){
     prepare_environment || return 1
-    ensure_command git git || return 1
     git clone "$REPO_URL" || { echo "failed to clone repo" ; return 1; }
     install_launcher || { echo "failed to install posh_theme launcher" ; return 1; }
     { echo "success installing posh_themer" ; return 0; }
