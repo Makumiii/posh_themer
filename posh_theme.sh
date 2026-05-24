@@ -10,7 +10,4 @@ if [ "$INSTRUCTION" = "uninstall" ]; then
     ./uninstall.sh
 else
     deno -A "$HOME/$FOLDER_NAME/index.ts"
-
-    exec zsh
-
 fi

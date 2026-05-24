@@ -96,6 +96,23 @@ exit 1
 '
 }
 
+stub_basic_commands() {
+    local stub_bin="$1"
+
+    write_executable "$stub_bin/bash" '/bin/bash "$@"'
+    write_executable "$stub_bin/sh" '/bin/sh "$@"'
+    write_executable "$stub_bin/awk" '/usr/bin/awk "$@"'
+    write_executable "$stub_bin/cat" '/bin/cat "$@"'
+    write_executable "$stub_bin/chmod" '/bin/chmod "$@"'
+    write_executable "$stub_bin/cp" '/bin/cp "$@"'
+    write_executable "$stub_bin/grep" '/bin/grep "$@"'
+    write_executable "$stub_bin/mkdir" '/bin/mkdir "$@"'
+    write_executable "$stub_bin/mktemp" '/bin/mktemp "$@"'
+    write_executable "$stub_bin/mv" '/bin/mv "$@"'
+    write_executable "$stub_bin/rm" '/bin/rm "$@"'
+    write_executable "$stub_bin/touch" '/bin/touch "$@"'
+}
+
 test_successful_install_prepares_dependencies() {
     local home stub_bin log
     home="$(make_stub_home)"
@@ -105,6 +122,7 @@ test_successful_install_prepares_dependencies() {
 
     HOME="$home" \
     POSH_THEMER_REPO_ROOT="$ROOT_DIR" \
+    POSH_THEMER_SHELL=zsh \
     PATH="$stub_bin:/bin:/usr/bin" \
         bash "$ROOT_DIR/install.sh" > "$log" 2>&1
 
@@ -116,12 +134,32 @@ test_successful_install_prepares_dependencies() {
     assert_contains "$log" "checking required dependencies"
 }
 
+test_successful_bash_install_configures_bashrc() {
+    local home stub_bin log
+    home="$(make_stub_home)"
+    stub_bin="$(make_stub_bin)"
+    log="$home/install.log"
+    stub_success_commands "$stub_bin"
+
+    HOME="$home" \
+    POSH_THEMER_REPO_ROOT="$ROOT_DIR" \
+    POSH_THEMER_SHELL=bash \
+    PATH="$stub_bin:/bin:/usr/bin" \
+        bash "$ROOT_DIR/install.sh" > "$log" 2>&1
+
+    assert_file "$home/.local/bin/posh_theme"
+    assert_contains "$home/.bashrc" 'oh-my-posh init bash'
+    assert_contains "$log" "configuring bash prompt"
+    [ ! -f "$home/.zshrc" ] || fail "bash install should not configure .zshrc"
+}
+
 test_installs_unzip_before_deno_when_extractor_missing() {
     local home stub_bin log
     home="$(make_stub_home)"
     stub_bin="$(make_stub_bin)"
     log="$home/install.log"
     stub_success_commands "$stub_bin"
+    stub_basic_commands "$stub_bin"
     rm -f "$stub_bin/unzip"
 
     write_executable "$stub_bin/apt-get" 'exit 0'
@@ -150,9 +188,10 @@ exit 0
 
     HOME="$home" \
     POSH_THEMER_REPO_ROOT="$ROOT_DIR" \
+    POSH_THEMER_SHELL=zsh \
     STUB_BIN="$stub_bin" \
-    PATH="$stub_bin:/bin:/usr/bin" \
-        bash "$ROOT_DIR/install.sh" > "$log" 2>&1
+    PATH="$stub_bin" \
+        /bin/bash "$ROOT_DIR/install.sh" > "$log" 2>&1
 
     assert_contains "$log" "unzip is required to extract oh-my-posh themes"
     assert_file "$stub_bin/unzip"
@@ -177,7 +216,7 @@ exit 0
     write_executable "$stub_bin/cat" '/bin/cat "$@"'
     write_executable "$stub_bin/mkdir" '/bin/mkdir "$@"'
 
-    if HOME="$home" PATH="$stub_bin" /bin/bash "$ROOT_DIR/install.sh" > "$log" 2>&1; then
+    if HOME="$home" POSH_THEMER_SHELL=zsh PATH="$stub_bin" /bin/bash "$ROOT_DIR/install.sh" > "$log" 2>&1; then
         fail "installer unexpectedly succeeded"
     fi
 
@@ -186,6 +225,7 @@ exit 0
 }
 
 test_successful_install_prepares_dependencies
+test_successful_bash_install_configures_bashrc
 test_installs_unzip_before_deno_when_extractor_missing
 test_aborts_before_clone_without_package_manager
 

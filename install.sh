@@ -6,6 +6,7 @@ DENO_BIN_PATH="$HOME/.deno/bin"
 THEMES_PATH="$HOME/.cache/oh-my-posh/themes"
 DEFAULT_THEME="jandedobbeleer.omp.json"
 ZSHRC_PATH="$HOME/.zshrc"
+BASHRC_PATH="$HOME/.bashrc"
 
 export PATH="$USER_BIN_PATH:$DENO_BIN_PATH:$PATH"
 
@@ -80,12 +81,55 @@ ensure_theme_extractor(){
     fi
 }
 
+detect_shell(){
+    raw_shell="${POSH_THEMER_SHELL:-${SHELL:-}}"
+    shell_name="${raw_shell##*/}"
+
+    case "$shell_name" in
+        bash|zsh)
+            echo "$shell_name"
+            return 0
+            ;;
+    esac
+
+    if command -v zsh >/dev/null 2>&1; then
+        echo zsh
+        return 0
+    fi
+
+    if command -v bash >/dev/null 2>&1; then
+        echo bash
+        return 0
+    fi
+
+    echo "Could not detect a supported shell. Install bash or zsh and run this installer again." >&2
+    return 1
+}
+
+shell_config_path(){
+    shell_name="$1"
+
+    case "$shell_name" in
+        bash)
+            echo "$BASHRC_PATH"
+            ;;
+        zsh)
+            echo "$ZSHRC_PATH"
+            ;;
+        *)
+            echo "Unsupported shell: $shell_name" >&2
+            return 1
+            ;;
+    esac
+}
+
 preflight_dependencies(){
     echo "checking required dependencies"
+    shell_name="$(detect_shell)" || return 1
     ensure_command curl curl || return 1
     ensure_command git git || return 1
     ensure_command jq jq || return 1
-    ensure_command zsh zsh || return 1
+    ensure_command "$shell_name" "$shell_name" || return 1
     ensure_theme_extractor || return 1
 }
 
@@ -158,22 +202,25 @@ ensure_oh_my_posh_themes(){
     fi
 }
 
-configure_zshrc(){
+configure_shellrc(){
+    shell_name="$(detect_shell)" || return 1
+    shell_config="$(shell_config_path "$shell_name")" || return 1
     path_line='export PATH="$HOME/.local/bin:$HOME/.deno/bin:$PATH"'
-    posh_line='eval "$(oh-my-posh init zsh --config "$HOME/.cache/oh-my-posh/themes/jandedobbeleer.omp.json")"'
+    posh_line="eval \"\$(oh-my-posh init $shell_name --config \"\$HOME/.cache/oh-my-posh/themes/jandedobbeleer.omp.json\")\""
 
-    touch "$ZSHRC_PATH" || { echo "failed to create $ZSHRC_PATH" ; return 1; }
+    echo "configuring $shell_name prompt in $shell_config"
+    touch "$shell_config" || { echo "failed to create $shell_config" ; return 1; }
 
-    if ! grep -Fqx "$path_line" "$ZSHRC_PATH"; then
-        printf '\n%s\n' "$path_line" >> "$ZSHRC_PATH" || {
-            echo "failed to update PATH in $ZSHRC_PATH"
+    if ! grep -Fqx "$path_line" "$shell_config"; then
+        printf '\n%s\n' "$path_line" >> "$shell_config" || {
+            echo "failed to update PATH in $shell_config"
             return 1
         }
     fi
 
     tmp_file="$(mktemp)" || { echo "failed to create temporary file" ; return 1; }
     awk -v new_line="$posh_line" '
-        /oh-my-posh init zsh/ && /--config/ {
+        /oh-my-posh init (bash|zsh)/ && /--config/ {
             if (!replaced) {
                 print new_line
                 replaced = 1
@@ -186,15 +233,15 @@ configure_zshrc(){
                 print new_line
             }
         }
-    ' "$ZSHRC_PATH" > "$tmp_file" || {
+    ' "$shell_config" > "$tmp_file" || {
         rm -f "$tmp_file"
-        echo "failed to update oh-my-posh configuration in $ZSHRC_PATH"
+        echo "failed to update oh-my-posh configuration in $shell_config"
         return 1
     }
 
-    mv "$tmp_file" "$ZSHRC_PATH" || {
+    mv "$tmp_file" "$shell_config" || {
         rm -f "$tmp_file"
-        echo "failed to save $ZSHRC_PATH"
+        echo "failed to save $shell_config"
         return 1
     }
 }
@@ -205,7 +252,7 @@ prepare_environment(){
     ensure_deno || return 1
     ensure_oh_my_posh || return 1
     ensure_oh_my_posh_themes || return 1
-    configure_zshrc || return 1
+    configure_shellrc || return 1
 }
 
 install_launcher(){
