@@ -30,11 +30,14 @@ The installer keeps app-managed tools user-local where possible:
 - Oh My Posh themes are installed under `~/.cache/oh-my-posh/themes`
 - `~/.bashrc` or `~/.zshrc` is updated with `~/.local/bin`, `~/.deno/bin`, and
   the default `jandedobbeleer` prompt based on your active shell
+- On Omarchy Bash installations, a user-local compatibility guard prevents
+  Omarchy's Starship prompt from initializing while leaving the `starship`
+  command and the rest of Omarchy's shell setup available
 
-If `jq` or support packages such as `unzip`, `curl`, or `git` are missing on an
-`apt-get` based system, the installer uses `sudo apt-get` to install them. On
-non-apt systems, install the missing package with your system package manager
-and rerun the installer.
+If `jq` or support packages such as `unzip`, `curl`, or `git` are missing, the
+installer can install them with `apt-get` (Debian/Ubuntu), `dnf` (Fedora), or
+`pacman` (Arch Linux/Omarchy). If none of those package managers is available,
+install the missing package manually and rerun the installer.
 
 ## Uninstalling
 

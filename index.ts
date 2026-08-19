@@ -100,7 +100,7 @@ async function applyTheme(themeName: string): Promise<boolean> {
       .find((line) => line.includes("oh-my-posh") && line.includes("--config"));
 
     const newLine =
-      `eval "$(oh-my-posh init ${SHELL_CONFIG.name} --config "$HOME/.cache/oh-my-posh/themes/${themeName}")"`;
+      `eval "$(oh-my-posh init ${SHELL_CONFIG.name} --strict --config "$HOME/.cache/oh-my-posh/themes/${themeName}")"`;
 
     if (!themeLine) {
       // No existing config found, append the new line

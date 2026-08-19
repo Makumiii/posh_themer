@@ -7,6 +7,8 @@ THEMES_PATH="$HOME/.cache/oh-my-posh/themes"
 DEFAULT_THEME="jandedobbeleer.omp.json"
 ZSHRC_PATH="$HOME/.zshrc"
 BASHRC_PATH="$HOME/.bashrc"
+POSH_CONFIG_PATH="$HOME/.config/posh_themer"
+OMARCHY_GUARD_PATH="$POSH_CONFIG_PATH/omarchy-starship-guard.bash"
 
 export PATH="$USER_BIN_PATH:$DENO_BIN_PATH:$PATH"
 
@@ -19,18 +21,24 @@ EOF
 echo checking if already installed
 cd "$HOME" || exit
 
-install_apt_package(){
+install_system_package(){
     package_name="$1"
 
-    if ! command -v apt-get >/dev/null 2>&1; then
-        echo "$package_name is required but apt-get was not found."
-        echo "Install $package_name manually with your system package manager and run this installer again."
+    if command -v apt-get >/dev/null 2>&1; then
+        echo "$package_name not found, installing with apt-get"
+        sudo apt-get update || { echo "failed to update apt package lists" ; return 1; }
+        sudo apt-get install -y "$package_name" || { echo "failed to install $package_name" ; return 1; }
+    elif command -v dnf >/dev/null 2>&1; then
+        echo "$package_name not found, installing with dnf"
+        sudo dnf install -y "$package_name" || { echo "failed to install $package_name" ; return 1; }
+    elif command -v pacman >/dev/null 2>&1; then
+        echo "$package_name not found, installing with pacman"
+        sudo pacman -S --needed --noconfirm "$package_name" || { echo "failed to install $package_name" ; return 1; }
+    else
+        echo "$package_name is required but no supported package manager was found."
+        echo "Install $package_name manually and run this installer again."
         return 1
     fi
-
-    echo "$package_name not found, installing with apt-get"
-    sudo apt-get update || { echo "failed to update apt package lists" ; return 1; }
-    sudo apt-get install -y "$package_name" || { echo "failed to install $package_name" ; return 1; }
 }
 
 ensure_command(){
@@ -41,7 +49,7 @@ ensure_command(){
         return 0
     fi
 
-    install_apt_package "$package_name" || return 1
+    install_system_package "$package_name" || return 1
 
     if ! command -v "$command_name" >/dev/null 2>&1; then
         echo "$command_name is still not available after installing $package_name"
@@ -59,7 +67,7 @@ ensure_archive_extractor(){
     fi
 
     echo "neither unzip nor 7z was found; installing unzip"
-    install_apt_package unzip || return 1
+    install_system_package unzip || return 1
 
     if ! command -v unzip >/dev/null 2>&1; then
         echo "unzip is still not available after installation"
@@ -73,7 +81,7 @@ ensure_theme_extractor(){
     fi
 
     echo "unzip is required to extract oh-my-posh themes"
-    install_apt_package unzip || return 1
+    install_system_package unzip || return 1
 
     if ! command -v unzip >/dev/null 2>&1; then
         echo "unzip is still not available after installation"
@@ -121,6 +129,78 @@ shell_config_path(){
             return 1
             ;;
     esac
+}
+
+is_omarchy_bash(){
+    shell_name="$1"
+    shell_config="$2"
+    omarchy_path="${POSH_THEMER_OMARCHY_PATH:-${OMARCHY_PATH:-/usr/share/omarchy}}"
+
+    [ "$shell_name" = bash ] || return 1
+    [ -f "$omarchy_path/default/bash/init" ] || return 1
+    grep -Fq 'source "$OMARCHY_PATH/default/bash/rc"' "$shell_config"
+}
+
+write_omarchy_starship_guard(){
+    mkdir -p "$POSH_CONFIG_PATH" || {
+        echo "failed to create $POSH_CONFIG_PATH"
+        return 1
+    }
+
+    cat > "$OMARCHY_GUARD_PATH" <<'EOF'
+# Managed by posh_themer. Suppress only Omarchy's Starship prompt initialization.
+_posh_themer_starship_binary="$(type -P starship 2>/dev/null || true)"
+if [ -n "$_posh_themer_starship_binary" ]; then
+    starship(){
+        if [ "${1:-}" = init ] && [ "${2:-}" = bash ]; then
+            printf ':\n'
+        else
+            "$_posh_themer_starship_binary" "$@"
+        fi
+    }
+fi
+
+posh_themer_restore_starship(){
+    if [ -n "$_posh_themer_starship_binary" ]; then
+        unset -f starship
+    fi
+    unset _posh_themer_starship_binary
+    unset -f posh_themer_restore_starship
+}
+EOF
+}
+
+configure_omarchy_bash(){
+    shell_config="$1"
+    guard_source='source "$HOME/.config/posh_themer/omarchy-starship-guard.bash"'
+    restore_call='posh_themer_restore_starship'
+
+    write_omarchy_starship_guard || return 1
+
+    if grep -Fqx "$guard_source" "$shell_config"; then
+        return 0
+    fi
+
+    tmp_file="$(mktemp)" || { echo "failed to create temporary file" ; return 1; }
+    awk -v guard="$guard_source" -v restore="$restore_call" '
+        $0 == "source \"$OMARCHY_PATH/default/bash/rc\"" {
+            print guard
+            print
+            print restore
+            next
+        }
+        { print }
+    ' "$shell_config" > "$tmp_file" || {
+        rm -f "$tmp_file"
+        echo "failed to configure Omarchy prompt compatibility"
+        return 1
+    }
+
+    mv "$tmp_file" "$shell_config" || {
+        rm -f "$tmp_file"
+        echo "failed to save Omarchy prompt compatibility"
+        return 1
+    }
 }
 
 preflight_dependencies(){
@@ -206,10 +286,15 @@ configure_shellrc(){
     shell_name="$(detect_shell)" || return 1
     shell_config="$(shell_config_path "$shell_name")" || return 1
     path_line='export PATH="$HOME/.local/bin:$HOME/.deno/bin:$PATH"'
-    posh_line="eval \"\$(oh-my-posh init $shell_name --config \"\$HOME/.cache/oh-my-posh/themes/jandedobbeleer.omp.json\")\""
+    posh_line="eval \"\$(oh-my-posh init $shell_name --strict --config \"\$HOME/.cache/oh-my-posh/themes/jandedobbeleer.omp.json\")\""
 
     echo "configuring $shell_name prompt in $shell_config"
     touch "$shell_config" || { echo "failed to create $shell_config" ; return 1; }
+
+    if is_omarchy_bash "$shell_name" "$shell_config"; then
+        echo "configuring Omarchy to use Oh My Posh instead of Starship"
+        configure_omarchy_bash "$shell_config" || return 1
+    fi
 
     if ! grep -Fqx "$path_line" "$shell_config"; then
         printf '\n%s\n' "$path_line" >> "$shell_config" || {
